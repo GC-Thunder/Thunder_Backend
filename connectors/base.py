@@ -1,1 +1,1 @@
-# TODO: Add implementation code here
+# Abstract Connector Interface (Factory Pattern)
