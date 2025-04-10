@@ -1,3 +1,16 @@
+def normalize_match_details(raw_data: dict) -> dict:
+    return {
+        "id": raw_data.get("object_id"),
+        "teams": raw_data.get("teams"),
+        "venue": raw_data.get("venue"),
+        "status": raw_data.get("status"),
+    }
+
+
+
+
+
+
 # Normalize scraped data (dict → structured format)
 
 # espn_adapter.py
