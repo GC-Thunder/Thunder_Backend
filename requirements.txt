@@ -2,3 +2,7 @@ python-espncricinfo
 espn-api
 celery
 beautifulsoup4
+selenium
+celery
+redis
+lxml
