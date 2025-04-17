@@ -1,6 +1,8 @@
-from typing import TypedDict, List, Dict, Union
+from pydantic import BaseModel
+from typing import List, Dict, Union
 
-class BattingEntry(TypedDict):
+
+class BattingEntry(BaseModel):
     Player: str
     Dismissal: str
     Runs: str
@@ -9,7 +11,8 @@ class BattingEntry(TypedDict):
     Six: str
     SR: str
 
-class BowlingEntry(TypedDict):
+
+class BowlingEntry(BaseModel):
     Bowler: str
     Overs: str
     Maidens: str
@@ -22,7 +25,8 @@ class BowlingEntry(TypedDict):
     WD: str
     NB: str
 
-class Inning(TypedDict):
+
+class Inning(BaseModel):
     Innings: str
     Batting: List[BattingEntry]
     Extras: List[Dict[str, str]]
@@ -32,6 +36,7 @@ class Inning(TypedDict):
     Fall_of_wickets: List[str]
     Match_Flow: List[Dict[str, Union[int, str]]]
 
-class FullScorecardData(TypedDict):
+
+class FullScorecardData(BaseModel):
     match_details: Dict[str, str]
     innings: List[Inning]
