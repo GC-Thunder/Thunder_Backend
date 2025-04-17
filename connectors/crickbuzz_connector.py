@@ -1,6 +1,3 @@
-# Fallback BeautifulSoup scraper ├── utils/
-import os 
-import json 
 import time 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
