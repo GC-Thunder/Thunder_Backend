@@ -1,3 +1,4 @@
+
 # Fallback BeautifulSoup scraper ├── utils/
 import os 
 import requests
@@ -5,7 +6,7 @@ import time
 from bs4 import BeautifulSoup
 import re
 from urllib.parse import urljoin,urlparse
-from requests_html import HTMLSession
+# from requests_html import HTMLSession
 import json 
 from connectors.models.scorecard_model import BattingEntry,BowlingEntry,Inning,FullScorecardData
 from connectors.models.table_model import TableTeamData
@@ -725,22 +726,102 @@ class ESPNCrickinfo():
 
         except Exception as e:
             print(f"❌ Error while scraping full season Table data: {e}")
+    def scrape_mvp_data(self, series_url):
+        """
+        Scrapes the MVP (Most Valuable Player) data for a specific IPL season.
+        series_url is the relative URL for the IPL season (e.g., /series/ipl-2025-1449924).
+        """
+        # Construct the MVP URL for the specific series/season
+        mvp_url = urljoin(self.base_url, series_url + "/" + self.base_most_valuable_player)
+        
+        session = requests.Session()
+        response = session.get(mvp_url, headers=self.headers)
 
-# if __name__ == "__main__":
-#     espn = ESPNCrickinfo(
-#             constants.headers,
-#             constants.BASE_URL,
-#             constants.BASE_FIXTURE_AND_RESULT_URL,
-#             constants.BASE_TEAMS_URL,
-#             constants.BASE_SQUADS_URL,
-#             constants.BASE_MOST_VALUABLE_PLAYER,
-#             constants.BASE_PONITS_TABLE,
-#             constants.IPL_SERIES_URLS,
-#             constants.IPL_SERIES_2025_URL
-#         )
-#     match_url = urljoin(constants.BASE_URL, constants.IPL_SERIES_2025_URL)
+        if response.status_code != 200:
+            raise Exception(f"Failed to fetch MVP page: {response.status_code}")
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # MVP data container
+        mvp_data = []
+
+        # Find all MVP table rows
+        rows = soup.find_all('tr', class_='ds-text-tight-s')
+
+        for row in rows:
+            columns = row.find_all('td')
+            if len(columns) >= 7:
+                # Extracting rank and player name (rank is the numeric part)
+                rank_player_string = columns[0].get_text(strip=True)
+                match = re.match(r"(\d+)([A-Za-z\s]+)", rank_player_string)  # Regex to split number and string
+
+                if match:
+                    rank = match.group(1)  # Numeric rank
+                    player_name = match.group(2).strip()  # Player name (alphabetic part)
+                else:
+                    # In case the regex fails (e.g., malformed rank)
+                    rank = rank_player_string
+                    player_name = ""
+
+                # Extract team name (with error handling if the <a> tag is not found)
+                team_tag = columns[1].find('a')
+                team = team_tag.get_text(strip=True) if team_tag else "-"
+
+                # Extract other fields (total impact, matches, runs)
+                total_impact = columns[2].get_text(strip=True)
+                impact_per_match = columns[3].get_text(strip=True)
+                matches = columns[4].get_text(strip=True)
+                runs = columns[5].get_text(strip=True)
+
+                # Add the data to the list with improved formatting
+                mvp_data.append({
+                    "rank": rank,
+                    "player_name": player_name,
+                    "team": team,
+                    "total_impact": total_impact,
+                    "impact_per_match": impact_per_match,
+                    "matches": matches if matches else "-",
+                    "runs": runs if runs else "-"
+                })
+
+        return mvp_data
+    def scrape_full_season_mvp_data(self):
+        """
+        Scrapes the MVP data for all IPL seasons from the IPL_SERIES_URLS list.
+        """
+        all_mvp_data = {}
+
+        for series_url in self.ipl_series_list_historical:
+            print(f"Scraping MVP data for: {series_url}")
+            try:
+                mvp_data = self.scrape_mvp_data(series_url)
+                all_mvp_data[series_url] = mvp_data
+                print(f"MVP data for {series_url}: {json.dumps(mvp_data, indent=4)}")
+            except Exception as e:
+                print(f"Failed to scrape MVP data for {series_url}: {e}")
+
+        # Optionally, save the data to a file
+        with open('mvp_data.json', 'w') as f:
+            json.dump(all_mvp_data, f, indent=4)
+
+        return all_mvp_data
+if __name__ == "__main__":    
+    espn = ESPNCrickinfo(
+            constants.headers,
+            constants.BASE_URL,
+            constants.BASE_FIXTURE_AND_RESULT_URL,
+            constants.BASE_TEAMS_URL,
+            constants.BASE_SQUADS_URL,
+            constants.BASE_MOST_VALUABLE_PLAYER,
+            constants.BASE_PONITS_TABLE,
+            constants.IPL_SERIES_URLS,
+            constants.IPL_SERIES_2025_URL
+        )
+    match_url = urljoin(constants.BASE_URL, constants.IPL_SERIES_2025_URL)
     
-#     match_fixture_links: list[dict] = espn.scrape_live_scorecard_links_from_fixture_and_Result(match_url)
-#     print(json.dumps(match_fixture_links,indent=4))
-#     match_scorecard_data = espn.scrape_match_full_scorecard_innings_data(match_fixture_links[0]["link"])
-#     print("match score data ", json.dumps(match_scorecard_data, indent=4))
+    match_fixture_links: list[dict] = espn.scrape_live_scorecard_links_from_fixture_and_Result(match_url)
+    print(json.dumps(match_fixture_links,indent=4))
+    match_scorecard_data = espn.scrape_match_full_scorecard_innings_data(match_fixture_links[0]["link"])
+    print("match score data ", json.dumps(match_scorecard_data, indent=4))
+    mvp_data = espn.scrape_full_season_mvp_data()
+    print(json.dumps(mvp_data, indent=4))
