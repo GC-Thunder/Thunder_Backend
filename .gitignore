@@ -1,1 +1,11 @@
+# Virtual environment
 .venv
+
+# Data 
+ipl/
+
+# Ignore all _pycache_ folders recursively
+**/_pycache_/
+
+# Ignore all .pyc files just in case
+*/.pyc
