@@ -1,2 +1,0 @@
-# Fallback BeautifulSoup scraper ├── utils/
-
