@@ -16,40 +16,28 @@ class CricksheetCrickinfo:
         response.raise_for_status()
         return BytesIO(response.content)
 
-    def extract_latest_file(self, zip_bytes):
-        match_data = None
-        file_path = None
+    def extract_latest_files(self, zip_bytes, n):
+        match_data_list = []
 
         with zipfile.ZipFile(zip_bytes) as z:
-            last_file = z.namelist()[-1]
-            file_path = os.path.join(self.save_dir, last_file)
+            file_names = sorted([name for name in z.namelist() if name.endswith(".json")])[-n:]
 
-            with z.open(last_file) as f:
-                match_data = json.load(f)
+            for file_name in file_names:
+                file_path = os.path.join(self.save_dir, file_name)
+                
+                with z.open(file_name) as f:
+                    match_data = json.load(f)
+                
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump(match_data, f, indent=4, ensure_ascii=False)
 
-            with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(match_data, f, indent=4, ensure_ascii=False)
+                match_data_list.append(match_data)
 
-        # Cleanup saved file if needed
-        if self.cleanup and file_path and os.path.exists(file_path):
-            os.remove(file_path)
+                if self.cleanup and os.path.exists(file_path):
+                    os.remove(file_path)
 
-        return match_data
+        return match_data_list
 
-    def run(self):
+    def run(self, n=1):
         with self.download_zip() as zip_bytes:
-            return self.extract_latest_file(zip_bytes)
-
-
-"""
-example of how the function is called 
-
-# To keep the saved file
-downloader = IPLJsonDownloader()
-data = downloader.run()
-
-# Or, to delete the saved JSON file after reading:
-temp_downloader = IPLJsonDownloader(cleanup=True)
-temp_data = temp_downloader.run()
-
-"""
+            return self.extract_latest_files(zip_bytes, n)

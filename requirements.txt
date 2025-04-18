@@ -6,3 +6,4 @@ selenium
 celery
 celery[redis]
 pydantic
+pathway

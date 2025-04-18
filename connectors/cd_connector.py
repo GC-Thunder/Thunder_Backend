@@ -55,7 +55,7 @@ class CDConnector(CricketDataInterface):
         return self.crickbuzz.scrape_live_bbb_commentary(match_url)
         
     def live_overwise_summary(self,match_url:str): # will define model after testing 
-        return self.crickbuzz.scrape_overwise_summary()
+        return self.crickbuzz.scrape_overwise_summary(match_url)
 
-    def btb_innings(self) -> MatchData:
-        return self.cricksheet.run()
+    def btb_innings(self,n:int) -> MatchData:
+        return self.cricksheet.run(n)
