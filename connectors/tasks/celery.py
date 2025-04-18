@@ -11,8 +11,5 @@ app = Celery(
 # Load custom configuration from celeryconfig.py
 app.config_from_object('connectors.tasks.celeryconfig')
 
-# Optional: Auto-discover tasks in the same package
-app.autodiscover_tasks(['connectors.tasks'])
-
 if __name__ == '__main__':
     app.start()

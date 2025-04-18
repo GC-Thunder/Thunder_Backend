@@ -2,11 +2,9 @@
 # Fallback BeautifulSoup scraper ├── utils/
 import os 
 import requests
-import time 
 from bs4 import BeautifulSoup
 import re
 from urllib.parse import urljoin,urlparse
-# from requests_html import HTMLSession
 import json 
 from connectors.models.scorecard_model import BattingEntry,BowlingEntry,Inning,FullScorecardData
 from connectors.models.table_model import TableTeamData

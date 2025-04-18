@@ -18,7 +18,7 @@ class CricketDataInterface(ABC):
     def load_mvps(self,series_url:str) -> list[dict]: pass # need to impliment the scraping
     
     @abstractmethod
-    def live_btb_commentary(self,match_url:str) -> list[dict]: pass
+    def live_bbb_commentary(self,match_url:str) -> list[dict]: pass
 
     @abstractmethod
     def live_overwise_summary(self,match_url:str) -> list[dict]: pass

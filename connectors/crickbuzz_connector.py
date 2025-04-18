@@ -1,6 +1,3 @@
-# Fallback BeautifulSoup scraper ├── utils/
-import os 
-import json 
 import time 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -22,15 +19,30 @@ class CrickbuzzCrickinfo():
 
     def scrape_overwise_summary(self,match_url: str) -> OverwiseSummary:
         options = Options()
-        options.add_argument("--headless")
-        driver = webdriver.Chrome(options=options)
+        options.headless = True  # Ensure this is set to True to run in headless mode
+
+        # Start the browser in headless mode
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
         try:
             driver.get(match_url)
-
+            
+            for _ in range(2):  # Limit the number of clicks to prevent infinite loop
+                try:
+                    load_more = driver.find_element(By.ID, "full_commentary_btn")
+                    if load_more.is_displayed():
+                        driver.execute_script("arguments[0].click();", load_more)
+                        time.sleep(2)  # Wait for new content to load
+                    else:
+                        break
+                except Exception as e:
+                    print("No more 'Load More Commentary' button or error:", e)
+                    break
+            time.sleep(20)
             overwise_data = []
             summary_blocks = driver.find_elements(By.CLASS_NAME, "cb-com-ovr-sum-rw")
 
+            
             for block in summary_blocks:
                 try:
                     over = block.find_element(By.CLASS_NAME, "cb-font-18").text.strip()
@@ -93,7 +105,17 @@ class CrickbuzzCrickinfo():
             
             # Wait for the page to load (adjust based on your internet speed)
             time.sleep(10)  # You can adjust this sleep duration
-
+            for _ in range(2):  # Limit the number of clicks to prevent infinite loop
+                try:
+                    load_more = driver.find_element(By.ID, "full_commentary_btn")
+                    if load_more.is_displayed():
+                        driver.execute_script("arguments[0].click();", load_more)
+                        time.sleep(2)  # Wait for new content to load
+                    else:
+                        break
+                except Exception as e:
+                    print("No more 'Load More Commentary' button or error:", e)
+                    break
             commentary_data = []
 
             # Find all top-level commentary divs with an ID like "comm_1744553094941"

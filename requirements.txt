@@ -6,6 +6,5 @@ selenium
 celery
 celery[redis]
 pydantic
-requests_html
-lxml[html_clean]
+pathway
 webdriver_manager
