@@ -1,1 +1,19 @@
+# Virtual environment
 .venv
+
+.env
+
+# Data 
+ipl/
+
+# Ignore all __pycache__ folders recursively
+__pycache__/
+**/__pycache__/
+
+# Ignore all .pyc files recursively
+*.pyc
+**/*.pyc
+
+
+qdrant_data/
+Lib/

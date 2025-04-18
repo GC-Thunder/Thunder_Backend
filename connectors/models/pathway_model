@@ -1,0 +1,26 @@
+import pathway as pw
+import datetime
+
+# Generic input schema with JSON data and optional key
+class InputSchema(pw.Schema):
+    key: int
+    data: pw.Json
+
+# Schema for team data, indexed by timestamp
+class PWTableTeamData(pw.Schema):
+    time: datetime.datetime
+    data: pw.Json
+
+# Schema for full scorecard data with timestamp
+class PWFullScorecardData(pw.Schema):
+    datetime: datetime.datetime  # Renamed for clarity and syntax
+    data: pw.Json
+
+# Schema for squad data with year
+class PWSquadSchema(pw.Schema):
+    year: int
+    data: pw.Json
+
+class PWMVP(pw.Schema):
+    datetime: datetime.datetime
+    data : pw.Json
