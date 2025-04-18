@@ -2,3 +2,4 @@ python-espncricinfo
 espn-api
 celery
 beautifulsoup4
+loguru
