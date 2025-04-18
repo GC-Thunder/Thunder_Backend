@@ -2,4 +2,9 @@ python-espncricinfo
 espn-api
 celery
 beautifulsoup4
-loguru
+selenium
+celery
+celery[redis]
+pydantic
+pathway
+webdriver_manager
