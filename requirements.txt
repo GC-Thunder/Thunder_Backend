@@ -8,3 +8,9 @@ celery[redis]
 pydantic
 pathway
 webdriver_manager
+fastapi[standard]
+pydantic
+bson
+loguru
+motor
+typing

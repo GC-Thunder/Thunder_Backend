@@ -4,8 +4,7 @@ import os
 from dotenv import load_dotenv
 
 # Import routes
-from api.routes import chat
-from api.routes import commentary
+from api.routes import chat,commentary
 # Load environment variables
 load_dotenv()
 

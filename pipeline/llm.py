@@ -11,6 +11,7 @@ from langchain.retrievers.self_query.base import SelfQueryRetriever
 #from qdrant_setup import vector_store  # Assumes you have this ready
 from openai import OpenAI as OpenAIClient
 
+load_dotenv()
 
 client = QdrantClient("http://localhost:6333")
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
@@ -27,7 +28,7 @@ class SportsChatbot:
         self.api_key = os.getenv("OPENAI_API_KEY")
         self.llm = OpenAI(temperature=0)
         self.client = OpenAIClient(api_key=self.api_key)
-        self.memory=[]
+        #self.memory=[]
 
         self.document_content_description = "a brief description of ipl and the formula 1 racing data."
         self.metadata_field_info = [
@@ -74,9 +75,7 @@ if any date is involved in the query, convert it to unix timestamp and use it in
         raw_output = response.output_text
         json_str = re.sub(r"```json|```", "", raw_output).strip()
         return json.loads(json_str)
-    def add_query(user_query:str,memory)->str:
-        if user_query!=None:
-            memory.append(f"the previous query was {user_query}")
+    
 
             
         
@@ -87,32 +86,27 @@ if any date is involved in the query, convert it to unix timestamp and use it in
 
         # Format system prompt for response generation
         system_prompt = f'''You are a chat bot that helps users improve their sports viewing experience. From the given retrieved data, answer the query in a descriptive way which should contain the answer to the question and be engaging.
+        also remember that you shoud give only the relevent information that you got from the retrieval. . 
 Original query: "{user_prompt}"
 Answer the question by carefully going through the input data.
 '''
-        if len(self.memory)!=0:
-            response = self.client.responses.create(
-            model="gpt-4o",
-            instructions=system_prompt+self.memory,
-            input=f"Input data: {documents}",
-            )
-            return response.output_text
+        
 
 
-        else:
-            response = self.client.responses.create(
+        
+        response = self.client.responses.create(
             model="gpt-4o",
             instructions=system_prompt,
             input=f"Input data: {documents}",
             )
-            return response.output_text
+        return response.output_text
 
         
     
 
     
 
-chatbot = SportsChatbot()
-result = chatbot.answer_query("total races won by team ferrari , give 20 records")
+'''chatbot = SportsChatbot()
+result = chatbot.answer_query("how many races were won by team ferrari in total , give 20 records")
 
-print(result)
+print(result)'''

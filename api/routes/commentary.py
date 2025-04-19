@@ -9,6 +9,8 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from typing import Type
 import asyncio
+from pipeline.llm import SportsChatbot
+import time
 router = APIRouter()
 client = OpenAI()
 
@@ -90,19 +92,48 @@ async def classify_intent(text: str) -> bool:
     
 
 async def stream_raw_model(user_query: str) -> AsyncGenerator[str, None]:
-    stream = client.responses.create(
-        model='gpt-4.1',
-        input=[{'role': 'user', 'content': user_query}],
-        stream=True
-    )
-    for chunk in stream:
-        yield f"data: {json.dumps(chunk.dict())}\n\n"
+    chat_bot=  SportsChatbot()
+    time.sleep(3)
+    print('user query',user_query)
+    message = chat_bot.answer_query(user_query)
+    print(message)
+
+    response_id = f"resp_{hash(user_query)}"
+    created_event = {
+        "type": "response.created",
+        "response": {
+            "id": response_id
+        }
+    }
+    yield f"data: {json.dumps(created_event)}\n\n"
+    
+    # Stream the message character by character to simulate typing
+    # For smoother streaming, you can adjust the chunk size
+    chunk_size = 3
+    for i in range(0, len(message), chunk_size):
+        text_chunk = message[i:i+chunk_size]
+        delta_event = {
+            "type": "response.output_text.delta",
+            "delta": text_chunk
+        }
+        yield f"data: {json.dumps(delta_event)}\n\n"
+        
+        # Optional: Add a small delay for more natural typing effect
+        await asyncio.sleep(0.05)
+    
+    # Send completed event at the end
+    completed_event = {
+        "type": "response.completed"
+    }
+    yield f"data: {json.dumps(completed_event)}\n\n"
 
 async def stream_rag_pipeline(user_query: str) -> AsyncGenerator[str, None]:
     """
     Your RAG pipeline async generator that yields chunks matching the format
     expected by the frontend
     """
+    # chat_bot=  SportsChatbot()
+    # message = chat_bot.answer_query(user_query)
     user_intent = UserIntentionJson()
     response_data = user_intent.get_structured_intention_response(chatbot_prompt, user_query, IntentSchema)
     message = response_data.get("message", "No commentary available at the moment.")

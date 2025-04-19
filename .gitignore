@@ -17,3 +17,5 @@ __pycache__/
 
 qdrant_data/
 Lib/
+
+/ipl_historical
