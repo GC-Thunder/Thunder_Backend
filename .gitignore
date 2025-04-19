@@ -1,6 +1,5 @@
 # Virtual environment
 .venv
-
 .env
 
 # Data 
@@ -14,8 +13,6 @@ __pycache__/
 *.pyc
 **/*.pyc
 
-
 qdrant_data/
+# Ignore the Lib directory
 Lib/
-
-/ipl_historical
