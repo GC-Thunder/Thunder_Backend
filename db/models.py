@@ -43,11 +43,3 @@ def validate_object_id(id: str) -> ObjectId:
         return ObjectId(id)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid ID format")
-
-# You can define Pydantic models here for request/response validation
-# Example:
-# from pydantic import BaseModel
-# class ChatCreate(BaseModel):
-#     userId: str
-#     title: str
-#     messages: list = []

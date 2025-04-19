@@ -11,6 +11,11 @@ from typing import Type
 import asyncio
 from pipeline.llm import SportsChatbot
 import time
+import redis.asyncio as redis
+
+
+REDIS_URL = "redis://localhost:6379/0"
+
 router = APIRouter()
 client = OpenAI()
 
@@ -134,9 +139,10 @@ async def stream_rag_pipeline(user_query: str) -> AsyncGenerator[str, None]:
     """
     # chat_bot=  SportsChatbot()
     # message = chat_bot.answer_query(user_query)
-    user_intent = UserIntentionJson()
-    response_data = user_intent.get_structured_intention_response(chatbot_prompt, user_query, IntentSchema)
-    message = response_data.get("message", "No commentary available at the moment.")
+    # user_intent = UserIntentionJson()
+    # response_data = user_intent.get_structured_intention_response(chatbot_prompt, user_query, IntentSchema)
+    # message = response_data.get("message", "No commentary available at the moment.")
+    message = user_query
     
     # Generate a unique response ID
     response_id = f"resp_{hash(user_query)}"
@@ -170,6 +176,8 @@ async def stream_rag_pipeline(user_query: str) -> AsyncGenerator[str, None]:
     }
     yield f"data: {json.dumps(completed_event)}\n\n"
 
+
+
 @router.post('/stream', status_code=201)
 async def stream_response(userQuery: str = Body(..., embed=True)):
     intent = await classify_intent(userQuery)
@@ -177,19 +185,29 @@ async def stream_response(userQuery: str = Body(..., embed=True)):
     async def event_generator():
         try:
             if intent:
-                # First send a custom event so client can open a new window
                 open_event = {
                     "action": "open_commentary_window",
                     "message": "Starting commentary stream…"
                 }
-                # note the "event: openWindow" line
                 yield f"event: openWindow\ndata: {json.dumps(open_event)}\n\n"
 
-                # now hand off to your RAG pipeline
-                async for s in stream_rag_pipeline(userQuery):
-                    yield s
+                # Connect to Redis (with specified db)
+                r = redis.Redis.from_url(REDIS_URL)
+                pubsub = r.pubsub()
+                await pubsub.subscribe("commentary_channel")
+
+                try:
+                    async for message in pubsub.listen():
+                        if message is None or message["type"] != "message":
+                            continue
+                        data = json.loads(message["data"])
+                        print(json.dumps(data,indent=4))
+                        async for s in stream_rag_pipeline(json.dumps(data)):
+                            yield s
+                finally:
+                    await pubsub.unsubscribe("commentary_channel")
+                    await pubsub.close()
             else:
-                # fallback to raw model streaming
                 async for s in stream_raw_model(userQuery):
                     yield s
 
@@ -198,3 +216,4 @@ async def stream_response(userQuery: str = Body(..., embed=True)):
             yield f"data: {json.dumps(err)}\n\n"
 
     return StreamingResponse(event_generator(), media_type='text/event-stream')
+

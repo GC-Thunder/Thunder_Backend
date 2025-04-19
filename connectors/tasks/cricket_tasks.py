@@ -2,6 +2,7 @@ import os
 import pytz
 import time
 import json
+import redis
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
@@ -10,6 +11,10 @@ from celery import shared_task
 from connectors.cd_connector import CDConnector
 from connectors.utils.constants import IPL_SERIES_2025_URL
 cd = CDConnector()
+
+r = redis.StrictRedis(host='localhost', port=6379, db=0)
+def publish_to_redis(channel, data):
+    r.publish(channel, json.dumps(data))
 
 executor = ThreadPoolExecutor(max_workers=2)
 seen_commentary_overs = set()
@@ -28,6 +33,9 @@ def fetch_commentary(match_url):
 
 def fetch_summary(match_url):
     return cd.live_overwise_summary(match_url)
+
+def publish_to_redis(channel, data):
+    r.publish(channel, json.dumps(data))
 
 def ensure_file(file_path):
     """Ensures file exists and returns its loaded data or an empty list."""
@@ -51,8 +59,8 @@ def run_match_scraper(self, title: str, match_url: str):
         start_time = datetime.now(pytz.timezone('Asia/Kolkata'))
         end_time = start_time + timedelta(hours=4)
 
-        commentary_path = os.path.join('ipl', 'btb_commentary_1.json')
-        summary_path = os.path.join('ipl', 'overwise_summary_1.json')
+        commentary_path = os.path.join('ipl', 'btb_commentary.json')
+        summary_path = os.path.join('ipl', 'overwise_summary.json')
 
         commentary_store = ensure_file(commentary_path)
         summary_store = ensure_file(summary_path)
@@ -79,6 +87,7 @@ def run_match_scraper(self, title: str, match_url: str):
                     print(f"[NEW COMMENTARY] {title}: {len(new_commentary_entries)} new entries")
                     commentary_store.extend(new_commentary_entries[::-1])
                     save_json(commentary_path, commentary_store)
+                    publish_to_redis('commentary_channel', new_commentary_entries[::-1])
                 else:
                     print(f"[NO NEW COMMENTARY DATA] {title}")
 
@@ -92,7 +101,7 @@ def run_match_scraper(self, title: str, match_url: str):
 
                 if new_summary_entries:
                     print(f"[NEW SUMMARY] {title}: {len(new_summary_entries)} new entries")
-                    summary_store.extend(summary_store.extend(new_summary_entries[::-1]))
+                    summary_store.extend(new_summary_entries[::-1])
                     save_json(summary_path, summary_store)
                 else:
                     print(f"[NO NEW SUMMARY DATA] {title}")

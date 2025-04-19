@@ -1,6 +1,8 @@
+import os
+import redis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import os
+
 from dotenv import load_dotenv
 
 # Import routes
@@ -8,6 +10,8 @@ from api.routes import chat,commentary
 # Load environment variables
 load_dotenv()
 
+# redis client 
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
 # Initialize FastAPI app
 app = FastAPI()
 
