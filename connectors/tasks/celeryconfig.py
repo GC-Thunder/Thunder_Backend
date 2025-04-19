@@ -31,7 +31,7 @@ task_annotations = {
 # Beat Schedule: Run the match scheduler every day at 8:00 AM IST
 beat_schedule = {
     'run-daily-match-scheduler': {
-        'task': 'connectors.tasks.cricket_tasks.schedule_today_matches',
+        'task': 'connectors.tasks.cricket_tasks.run_match_scraper',
         'schedule': crontab(hour=8, minute=0),
     },
     'run-daily-table': {

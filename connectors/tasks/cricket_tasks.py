@@ -51,8 +51,8 @@ def run_match_scraper(self, title: str, match_url: str):
         start_time = datetime.now(pytz.timezone('Asia/Kolkata'))
         end_time = start_time + timedelta(hours=4)
 
-        commentary_path = os.path.join('ipl', 'btb_commentary.json')
-        summary_path = os.path.join('ipl', 'overwise_summary.json')
+        commentary_path = os.path.join('ipl', 'btb_commentary_1.json')
+        summary_path = os.path.join('ipl', 'overwise_summary_1.json')
 
         commentary_store = ensure_file(commentary_path)
         summary_store = ensure_file(summary_path)
@@ -92,7 +92,7 @@ def run_match_scraper(self, title: str, match_url: str):
 
                 if new_summary_entries:
                     print(f"[NEW SUMMARY] {title}: {len(new_summary_entries)} new entries")
-                    summary_store.extend(new_summary_entries.reverse())
+                    summary_store.extend(summary_store.extend(new_summary_entries[::-1]))
                     save_json(summary_path, summary_store)
                 else:
                     print(f"[NO NEW SUMMARY DATA] {title}")
